@@ -18,20 +18,26 @@ def initiate_emotion_analysis():
         if not is_frame_captured:
             messagebox.showerror("Error", "Could not read video frame.")
             break
-        emotion_results = emotion_detector.detect_emotions(video_frame)
+        frame_height, frame_width = video_frame.shape[:2]
+        target_height = 250
+        aspect_ratio = frame_width / frame_height
+        target_width = int(target_height * aspect_ratio)
+        resized_frame = cv2.resize(video_frame, (target_width, target_height))
+        emotion_results = emotion_detector.detect_emotions(resized_frame)
         for detection in emotion_results:
             bounding_box = detection['box']
             emotion_label = detection['emotions']
-            cv2.rectangle(video_frame, 
+            cv2.rectangle(resized_frame, 
                           (bounding_box[0], bounding_box[1]), 
                           (bounding_box[0] + bounding_box[2], bounding_box[1] + bounding_box[3]), 
                           (255, 0, 0), 2)
+            #
             most_likely_emotion = max(emotion_label, key=emotion_label.get)
             confidence_level = emotion_label[most_likely_emotion]
-            cv2.putText(video_frame, f'{most_likely_emotion}: {confidence_level:.2f}', 
+            cv2.putText(resized_frame, f'{most_likely_emotion}: {confidence_level:.2f}', 
                         (bounding_box[0], bounding_box[1] - 10), 
                         cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-        cv2.imshow('Real-Time Video Detector', video_frame)
+        cv2.imshow('Varunz Detection Video FRAME', resized_frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
     video_source.release()
@@ -58,11 +64,11 @@ def key_press(event):
     if event.char == 's':
         stop_emotion_detection()
 root = tk.Tk()
-root.title("Vraunz Facial Emotion Detector")
+root.title("Vraunz Facial Emotion Detector Program")
 root.geometry("490x512")
 root.bind('<Key>', key_press)
 start_button = tk.Button(root, text="Start Camera & Emotion Detection", command=start_emotion_detection, font=("Helvetica", 14))
 start_button.pack(pady=20)
-exit_button = tk.Button(root, text="Exit App", command=exit_app, font=("Helvetica", 14))
+exit_button = tk.Button(root, text="Exit", command=exit_app, font=("Helvetica", 14))
 exit_button.pack(pady=20)
 root.mainloop()
